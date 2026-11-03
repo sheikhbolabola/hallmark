@@ -13,9 +13,11 @@ jobs:
           node-version: 20
       - name: References, gates, fixtures, versions and links agree
         run: node skills/hallmark/scripts/refcheck.mjs
+      - name: Image generation cache regressions
+        run: node --test skills/hallmark/scripts/fixtures/imagegen/*.test.mjs
       - name: Every theme validates
         run: node skills/hallmark/scripts/theme.mjs validate skills/hallmark/references/themes/*.md
       - name: The theme index is current
         run: |
           node skills/hallmark/scripts/theme.mjs index
-          git diff --exit-code -- skills/hallmark/references/themes/index.json
+          node -e "const fs = require('node:fs'); const cp = require('node:child_process'); const assert = require('node:assert/strict'); const path = 'skills/hallmark/references/themes/index.json'; const committed = JSON.parse(cp.execFileSync('git', ['show', 'HEAD:' + path], { encoding: 'utf8' })); const generated = JSON.parse(fs.readFileSync(path, 'utf8')); delete committed.built; delete generated.built; assert.deepEqual(generated, committed);"
