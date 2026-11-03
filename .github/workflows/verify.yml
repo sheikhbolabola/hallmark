@@ -13,9 +13,22 @@ jobs:
           node-version: 20
       - name: References, gates, fixtures, versions and links agree
         run: node skills/hallmark/scripts/refcheck.mjs
+      - name: Sloplint CLI and redesign preservation regressions
+        run: node --test skills/hallmark/scripts/sloplint.test.mjs
       - name: Every theme validates
         run: node skills/hallmark/scripts/theme.mjs validate skills/hallmark/references/themes/*.md
       - name: The theme index is current
         run: |
           node skills/hallmark/scripts/theme.mjs index
-          git diff --exit-code -- skills/hallmark/references/themes/index.json
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import { execFileSync } from 'node:child_process';
+          import { readFileSync } from 'node:fs';
+          const path = 'skills/hallmark/references/themes/index.json';
+          const generated = JSON.parse(readFileSync(path, 'utf8'));
+          const committed = JSON.parse(execFileSync('git', ['show', `HEAD:${path}`], { encoding: 'utf8' }));
+          // The build date changes daily; all other index data must still agree.
+          delete generated.built;
+          delete committed.built;
+          assert.deepStrictEqual(generated, committed, 'Theme index is stale; run theme.mjs index and commit it');
+          NODE
