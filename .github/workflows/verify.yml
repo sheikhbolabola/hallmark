@@ -13,6 +13,8 @@ jobs:
           node-version: 20
       - name: References, gates, fixtures, versions and links agree
         run: node skills/hallmark/scripts/refcheck.mjs
+      - name: Sloplint CLI and redesign preservation regressions
+        run: node --test skills/hallmark/scripts/sloplint.test.mjs
       - name: Image generation cache regressions
         run: node --test skills/hallmark/scripts/fixtures/imagegen/*.test.mjs
       - name: Every theme validates
