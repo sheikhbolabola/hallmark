@@ -284,6 +284,11 @@ for (const target of clean) {
 }
 
 const FIX = join(ROOT, 'scripts', 'fixtures');
+// Run collector regressions in the existing CI entry point, with no dependencies.
+{
+  const run = spawnSync(process.execPath, ['--test', join(ROOT, 'scripts', 'sloplint.test.mjs')], { encoding: 'utf8', timeout: 120000 });
+  if (run.error || run.status !== 0) add('error', SKILL, 1, 'fixture', `sloplint collector regressions failed: ${run.error?.message || run.stderr || run.stdout}`);
+}
 const lintJson = (t) => { const r = spawnSync(process.execPath, [join(ROOT, 'scripts', 'sloplint.mjs'), t, '--json'], { encoding: 'utf8' }); try { return JSON.parse(r.stdout); } catch { return null; } };
 const gatesOf = (j) => new Set(j.findings.map((x) => String(x.gate)));
 const expectations = [
